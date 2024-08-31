@@ -1,7 +1,6 @@
-import LiveReact from "../../lib/live_react/assets/live_react";
+import LiveReact from "../../priv/live_react";
 import React from "react";
-import ReactDOM from "react-dom/client";
-import { render, screen, act } from "@testing-library/react";
+import { render } from "@testing-library/react";
 import "@testing-library/jest-dom";
 
 // Mock react-dom/client

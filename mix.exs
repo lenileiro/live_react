@@ -8,7 +8,8 @@ defmodule LiveReact.MixProject do
       elixir: "~> 1.14",
       start_permanent: Mix.env() == :prod,
       deps: deps(),
-      description: description()
+      description: description(),
+      files: ~w(lib priv .formatter.exs mix.exs README.md LICENSE)
     ]
   end
 

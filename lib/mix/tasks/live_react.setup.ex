@@ -36,7 +36,10 @@ defmodule Mix.Tasks.LiveReact.Setup do
     # 4. Add sample LiveView
     create_sample_live_view(web_module)
 
-    # 5. Print final instructions
+    # 5. Copy live_react.js to vendor folder
+    copy_live_react_js()
+
+    # 6. Print final instructions
     print_instructions()
   end
 
@@ -72,7 +75,7 @@ defmodule Mix.Tasks.LiveReact.Setup do
     File.mkdir_p!("assets/react")
 
     # Create HelloWorld.js
-    File.write!("assets/react/HelloWorld.js", """
+    File.write!("assets/react/HelloWorld.jsx", """
     import React, { useState } from 'react';
 
     const HelloWorld = ({ initialCount = 0, pushEvent }) => {
@@ -108,7 +111,7 @@ defmodule Mix.Tasks.LiveReact.Setup do
     # Update app.js
     append_to_file("assets/js/app.js", """
 
-    import LiveReact from "live_react";
+    import LiveReact from "../vendor/live_react";
     import ReactComponents from "../react";
 
     // Define your React components globally
@@ -123,7 +126,12 @@ defmodule Mix.Tasks.LiveReact.Setup do
 
   defp update_package_json do
     package_json_path = "assets/package.json"
-    package_json = File.read!(package_json_path) |> Jason.decode!()
+
+    package_json =
+      case File.read(package_json_path) do
+        {:ok, content} -> Jason.decode!(content)
+        {:error, _} -> %{}
+      end
 
     package_json =
       Map.update(package_json, "dependencies", %{}, fn deps ->
@@ -160,7 +168,69 @@ defmodule Mix.Tasks.LiveReact.Setup do
     end
     """
 
-    File.write!("lib/#{Macro.underscore(web_module)}/live/live_react_live.ex", content)
+    target_dir = "lib/#{Macro.underscore(web_module)}/live"
+
+    File.mkdir_p!(target_dir)
+
+    File.write!("#{target_dir}/live_react_live.ex", content)
+  end
+
+  defp copy_live_react_js do
+    target_dir = "assets/vendor"
+    target_path = Path.join(target_dir, "live_react.js")
+
+    File.mkdir_p!(target_dir)
+
+    content = """
+    import React from 'react';
+    import ReactDOM from 'react-dom/client';
+
+    const LiveReact = {
+      mounted() {
+        this.props = JSON.parse(this.el.dataset.props || '{}');
+        this.state = JSON.parse(this.el.dataset.state || '{}');
+        this.root = ReactDOM.createRoot(this.el);
+        this.renderComponent();
+      },
+      updated() {
+        const newProps = JSON.parse(this.el.dataset.props || '{}');
+        const newState = JSON.parse(this.el.dataset.state || '{}');
+        if (JSON.stringify(this.props) !== JSON.stringify(newProps) ||
+            JSON.stringify(this.state) !== JSON.stringify(newState)) {
+          this.props = newProps;
+          this.state = newState;
+          this.renderComponent();
+        }
+      },
+      renderComponent() {
+        const componentName = this.el.dataset.component;
+        const Component = window.LiveReactComponents[componentName];
+
+        if (!Component) {
+          console.error(`Component ${componentName} not found`);
+          return;
+        }
+
+        this.root.render(
+          React.createElement(Component, {
+            ...this.props,
+            ...this.state,
+            pushEvent: this.pushEvent.bind(this)
+          })
+        );
+      },
+      destroyed() {
+        if (this.root) {
+          this.root.unmount();
+        }
+      }
+    };
+
+    export default LiveReact;
+    """
+
+    File.write!(target_path, content)
+    Mix.shell().info("Created live_react.js at #{target_path}")
   end
 
   defp print_instructions do

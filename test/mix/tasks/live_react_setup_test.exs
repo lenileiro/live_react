@@ -33,11 +33,13 @@ defmodule Mix.Tasks.LiveReact.SetupTest do
         end)
       end)
 
-    assert File.exists?("#{@tmp_dir}/assets/react/HelloWorld.js")
+    assert File.exists?("#{@tmp_dir}/assets/react/HelloWorld.jsx")
     assert File.exists?("#{@tmp_dir}/assets/react/index.js")
     assert File.exists?("#{@tmp_dir}/lib/my_app_web/live/live_react_live.ex")
 
-    assert File.read!("#{@tmp_dir}/assets/js/app.js") =~ "import LiveReact from \"live_react\""
+    assert File.read!("#{@tmp_dir}/assets/js/app.js") =~
+             "import LiveReact from \"../vendor/live_react\""
+
     assert File.read!("#{@tmp_dir}/config/config.exs") =~ "LiveReact configuration"
 
     package_json = File.read!("#{@tmp_dir}/assets/package.json") |> Jason.decode!()
