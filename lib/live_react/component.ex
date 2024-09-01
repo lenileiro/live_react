@@ -26,18 +26,4 @@ defmodule LiveReact.Component do
     </div>
     """
   end
-
-  def update_react(socket_or_pid, id, new_props, new_state \\ %{})
-
-  def update_react(pid, id, new_props, new_state) when is_pid(pid) do
-    Phoenix.LiveView.send_update(pid, __MODULE__, %{id: id, props: new_props, state: new_state})
-  end
-
-  def update_react(%Phoenix.LiveView.Socket{} = socket, id, new_props, new_state) do
-    Phoenix.LiveView.send_update(socket.parent_pid || socket.root_pid, __MODULE__, %{
-      id: id,
-      props: new_props,
-      state: new_state
-    })
-  end
 end

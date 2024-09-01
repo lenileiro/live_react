@@ -39,7 +39,6 @@ describe("LiveReact", () => {
     hook.el.dataset.component = "TestComponent";
     hook.el.dataset.props = JSON.stringify({ initialCount: 0 });
     hook.pushEvent = mockPushEvent;
-
     window.LiveReactComponents = { TestComponent };
 
     // Mock the renderComponent method
@@ -65,11 +64,9 @@ describe("LiveReact", () => {
   test("updates when props change", () => {
     hook.mounted();
     expect(hook.root.render).toHaveBeenCalledTimes(2);
-
     hook.el.dataset.props = JSON.stringify({ initialCount: 5 });
     hook.updated();
     expect(hook.root.render).toHaveBeenCalledTimes(3);
-
     // Call updated again with the same props, should not render
     hook.updated();
     expect(hook.root.render).toHaveBeenCalledTimes(3);
@@ -88,5 +85,14 @@ describe("LiveReact", () => {
     hook.mounted();
     hook.destroyed();
     expect(hook.root.unmount).toHaveBeenCalled();
+  });
+
+  // Additional test for JSON parsing errors
+  test("handles JSON parsing errors gracefully", () => {
+    hook.el.dataset.props = "invalid json";
+    hook.mounted();
+    expect(hook.root.render).toHaveBeenCalled();
+    // The component should still render without crashing
+    expect(hook.props).toEqual({});
   });
 });

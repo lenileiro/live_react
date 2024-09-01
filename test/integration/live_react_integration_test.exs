@@ -17,9 +17,6 @@ defmodule LiveReact.IntegrationTest do
     assert has_element?(view, "#hello-world")
     assert html =~ "Server-side count: 0"
 
-    # Wait for the React component to render
-    :timer.sleep(500)
-
     # Trigger the increment event directly
     assert view
            |> element("#hello-world div[phx-click]")
